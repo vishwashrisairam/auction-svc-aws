@@ -2,6 +2,8 @@ const uuid = require('uuid')
 const AWS = require('aws-sdk')
 const dynamodb = new AWS.DynamoDB.DocumentClient();
 const createError = require('http-errors');
+import validator from '@middy/validator'
+import createAuctionSchema from '../lib/schema/createAuctionSchema'
 
 import commonMiddleware from '../lib/commonMiddleware'
 
@@ -15,7 +17,7 @@ const createAuction = async (event, context) => {
   const auction = {
     id : uuid.v4(),
     title,
-    status : 'Open',
+    status : 'OPEN',
     createdAt : now.toISOString(),
     endingAt:endDate.toISOString(), 
     highestBid : {
@@ -41,6 +43,7 @@ const createAuction = async (event, context) => {
 
 
 exports.handler = commonMiddleware(createAuction)
+  .use(validator({inputSchema :createAuctionSchema}))
 
 
 
