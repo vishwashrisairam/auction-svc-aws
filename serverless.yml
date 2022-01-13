@@ -13,12 +13,18 @@ provider:
   region: us-east-1
   environment : 
     AUCTIONS_TABLE_NAME : ${self:custom.AuctionsTable.name}
+    MAIL_QUEUE_URL: ${self:custom.MailQueue.url}
+    AUCTIONS_BUCKET_NAME: ${self:custom.AuctionsBucket.name}
   iamRoleStatements: 
     - ${file(iam/AuctionsTableIAM.yml):AuctionsTableIAM} 
+    - ${file(iam/MailQueueIAM.yml):MailQueueIAM} 
+    - ${file(iam/AuctionsBucketIAM.yml):AuctionsBucketIAM} 
   
 resources: 
   Resources:
     AuctionsTable: ${file(resources/AuctionsTable.yml):AuctionsTable}
+    AuctionsBucket: ${file(resources/AuctionsBucket.yml):AuctionsBucket}
+    AuctionsBucketPolicy: ${file(resources/AuctionsBucket.yml):AuctionsBucket}
 
 functions:
   createAuction:
@@ -27,6 +33,8 @@ functions:
       - http:
           method: POST
           path: /auction
+          authorizer: ${self:custom.authorizer}
+            
 
   getAuctions:
     handler: src/handlers/getAuctions.handler
@@ -34,6 +42,7 @@ functions:
       - http:
           method: GET
           path: /auctions
+          authorizer: ${self:custom.authorizer}
 
   getAuction:
     handler: src/handlers/getAuction.handler
@@ -41,6 +50,7 @@ functions:
       - http:
           method: GET
           path: /auction/{id}
+          authorizer: ${self:custom.authorizer}
 
   placeBid:
     handler: src/handlers/placeBid.handler
@@ -48,6 +58,16 @@ functions:
       - http:
           method: PATCH
           path: /auction/{id}/bid
+          authorizer: ${self:custom.authorizer}
+  
+  uploadAuctionPicture:
+    handler: src/handlers/uploadAuctionPicture.handler
+    events:
+      - http:
+          method: PATCH
+          path: /auction/{id}/picture
+          authorizer: ${self:custom.authorizer}
+          
   processAuctions:
     handler: src/handlers/processAuctions.handler
     # events:
@@ -55,8 +75,14 @@ functions:
 
 
 custom:
+  authorizer : arn:aws:lambda:#{AWS::Region}:#{AWS::AccountId}:function:auth-service-${self:provider.stage}-auth
   AuctionsTable:
     name: !Ref AuctionsTable
     arn:  !GetAtt AuctionsTable.Arn
+  MailQueue:
+    arn: ${cf:auction-svc-sls-base-${self:provider.stage}.MailQueueArn}
+    url: ${cf:auction-svc-sls-base-${self:provider.stage}.MailQueueUrl}
+  AuctionsBucket:
+    name: auctions-bucket-sairam-vishwa-${self:provider.stage}
   bundle : 
     linting : false 
