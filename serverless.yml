@@ -24,7 +24,7 @@ resources:
   Resources:
     AuctionsTable: ${file(resources/AuctionsTable.yml):AuctionsTable}
     AuctionsBucket: ${file(resources/AuctionsBucket.yml):AuctionsBucket}
-    AuctionsBucketPolicy: ${file(resources/AuctionsBucket.yml):AuctionsBucket}
+    AuctionsBucketPolicy: ${file(resources/AuctionsBucket.yml):AuctionsBucketPolicy}
 
 functions:
   createAuction:
@@ -83,6 +83,6 @@ custom:
     arn: ${cf:auction-svc-sls-base-${self:provider.stage}.MailQueueArn}
     url: ${cf:auction-svc-sls-base-${self:provider.stage}.MailQueueUrl}
   AuctionsBucket:
-    name: auctions-bucket-sairam-vishwa-${self:provider.stage}
+    name: auctions-bucket-sairam-vishwa-sadas-${self:provider.stage}
   bundle : 
     linting : false 
